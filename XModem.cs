@@ -261,22 +261,14 @@ namespace XModem
         xbuff[2] = (byte)(~packetno);
         c = srcsz - len; //len = data already sent
         if (c > bufsz) c = bufsz;
-        if (c >= 0)
+        if (c > 0)
         {
           //clear buffer
-          xbuff = memset(xbuff, 3, 0, bufsz);
+          xbuff = memset(xbuff, 3, CTRLZ, bufsz);
 
           #region fill xbuff with data
 
-          if (c == 0)
-          {
-            xbuff[3] = CTRLZ;
-          }
-          else
-          {
-            xbuff = memcpy(xbuff, 3, src, len, c);
-            if (c < bufsz) xbuff[3 + c] = CTRLZ;
-          }
+          xbuff = memcpy(xbuff, 3, src, len, c);
 
           #endregion
 
@@ -371,7 +363,7 @@ namespace XModem
             if (c == ACK)
               break;
           }
-          port.DiscardInBuffer();
+          //port.DiscardInBuffer();
           return (c == ACK) ? len : -5;
 
           #endregion
