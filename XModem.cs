@@ -206,7 +206,7 @@ namespace XModem
 
     #region XmodemTransmit
 
-    public int XmodemTransmit(byte[] src, int srcsz)
+    public int XmodemTransmit(byte[] src, int srcsz, bool use1K)
     {
       for (retry = 0; retry < 16; ++retry)
       {
@@ -216,12 +216,12 @@ namespace XModem
           if (c == 'C')
           {
             crc = 1;
-            return this.startTrans(src, srcsz);
+            return this.startTrans(src, srcsz, use1K);
           }
           else if (c == NAK)
           {
             crc = 0;
-            return this.startTrans(src, srcsz);
+            return this.startTrans(src, srcsz, use1K);
           }
           else if (c == CAN)
           {
@@ -250,13 +250,13 @@ namespace XModem
 
     #region startTrans
 
-    private int startTrans(byte[] src, int srcsz)
+    private int startTrans(byte[] src, int srcsz, bool use1K)
     {
       while (true)
       {
-        bufsz = 128;
+        bufsz = use1K ? 1024 : 128;
 
-        xbuff[0] = SOH;
+        xbuff[0] = use1K ? STX : SOH;
         xbuff[1] = packetno;
         xbuff[2] = (byte)(~packetno);
         c = srcsz - len; //len = data already sent
