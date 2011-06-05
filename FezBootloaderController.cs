@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO.Ports;
 using System.Management;
+using System.IO;
 
 namespace Prototype.Fez.BootloaderUtil
 {
@@ -35,6 +36,7 @@ namespace Prototype.Fez.BootloaderUtil
         {
             None = 0,
             GetLoaderVersion = (Byte) 'V',
+            LoadFirmware = (Byte)'X',
         }
 
         internal string GetLoaderVersion()
@@ -48,6 +50,55 @@ namespace Prototype.Fez.BootloaderUtil
         private void SendCommand(FezCommand fezCommand)
         {
             fezPort.Write(new byte[] { (byte)fezCommand }, 0, 1);
+        }
+
+        internal void LoadFirmware(string filename)
+        {
+            // Load the file into a memory block
+
+            byte[] data = ReadFileIntoByteArray(filename);
+
+            // Set up an XMODEM object
+
+            var xmodem = new XModem.XModem(fezPort);
+            var bytesSent = 0;
+            xmodem.PacketSent += (sender, args) => { bytesSent += 1024;  System.Console.Write("{0}% sent\r", Math.Min(bytesSent, data.Length) * 100 / data.Length ); };
+
+            // Tell the FEZ to get ready for some firmware
+
+            SendCommand(FezCommand.LoadFirmware);
+            fezPort.ReadLine(); // Eat "Start File Transfer" chit chat
+
+            // Transfer the block
+
+            var result = xmodem.XmodemTransmit(data, data.Length, true);
+
+            // Throw an exception if anything freaked
+
+            if (result < data.Length)
+            {
+                throw new Exception("Failed to transmit file " + result);
+            }
+
+            System.Console.WriteLine();
+            while (true)
+            {
+                var line = fezPort.ReadLine();
+                System.Console.WriteLine(line);
+            }
+        }
+
+        private byte[] ReadFileIntoByteArray(string filename)
+        {
+            MemoryStream outputStream;
+
+            using (var inputStream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            {
+                outputStream = new MemoryStream((int) inputStream.Length);
+                inputStream.CopyTo(outputStream);
+            }
+
+            return outputStream.ToArray();
         }
     }
 }
