@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="CRC16.cs" />
     <Compile Include="FezBootloaderController.cs" />
+    <Compile Include="FezBootloaderException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XModem.cs" />

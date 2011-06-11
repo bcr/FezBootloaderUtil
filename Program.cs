@@ -9,13 +9,23 @@ namespace Prototype.Fez.BootloaderUtil
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             var controller = new FezBootloaderController();
-            controller.Open();
-            System.Console.WriteLine("Version is {0} so there", controller.GetLoaderVersion());
-            controller.LoadFirmware(@"C:\Program Files (x86)\GHI Electronics\GHI NETMF v4.1 SDK\USBizi\Firmware\USBizi_CLR.GHI");
-            System.Console.WriteLine("All done.");
+            try
+            {
+                controller.Open();
+                System.Console.WriteLine("Loader version is {0}", controller.GetLoaderVersion());
+                controller.LoadFirmware(@"C:\Program Files (x86)\GHI Electronics\GHI NETMF v4.1 SDK\USBizi\Firmware\USBizi_CLR.GHI");
+                System.Console.WriteLine("All done.");
+            }
+            catch (FezBootloaderException e)
+            {
+                Console.WriteLine(e.Message);
+                return 1;
+            }
+
+            return 0;
         }
     }
 }

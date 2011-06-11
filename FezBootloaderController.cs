@@ -29,7 +29,7 @@ namespace Prototype.Fez.BootloaderUtil
             {
                 return new SerialPort((string) obj["DeviceID"], (int) (uint) obj["MaxBaudRate"]);
             }
-            throw new Exception("Unable to find FEZ device. Is it in bootloader mode?");
+            throw new FezBootloaderException("Unable to find FEZ device. Is it in bootloader mode?");
         }
 
         enum FezCommand : byte
@@ -77,15 +77,40 @@ namespace Prototype.Fez.BootloaderUtil
 
             if (result < data.Length)
             {
-                throw new Exception("Failed to transmit file " + result);
+                throw new FezBootloaderException("Failed to transmit file " + result);
             }
 
             System.Console.WriteLine();
-            while (true)
+
+            // There is a bunch more yak on the serial port, and the device
+            // has restarted in normal operation. You know, just FYI.
+            //while (true)
+            //{
+            //    var line = fezPort.ReadLine();
+            //    System.Console.WriteLine(line);
+            //}
+
+            Close();
+        }
+
+        private void Close()
+        {
+            try
             {
-                var line = fezPort.ReadLine();
-                System.Console.WriteLine(line);
+                fezPort.Close();
             }
+            catch (IOException)
+            {
+                // Nothing to see here. Move along.
+                // When the FEZ reboots itself after a file upload, the serial
+                // port is in a sad state. So be polite, do your best to close
+                // it, and when he freaks out with:
+                //
+                // IOException: A device attached to the system is not functioning.
+                //
+                // Say "I never did mind the little things."
+            }
+            fezPort = null;
         }
 
         private byte[] ReadFileIntoByteArray(string filename)
