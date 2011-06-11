@@ -8,3 +8,4 @@ OnBoardFlash.dat
 *.testsettings
 *.vsmdi
 TestResults
+_ReSharper*
